@@ -127,7 +127,7 @@ public class Dependencies: ResolvingContainer {
     private let container: Dependencies
     private let keyPath: KeyPath<Dependencies, Value>?
     
-    public init(container: Dependencies = .default) {
+    public init(_ type: Value.Type = Value.self, container: Dependencies = .default) {
         self.container = container
         keyPath = nil
     }
