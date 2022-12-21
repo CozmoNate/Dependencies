@@ -16,6 +16,9 @@ let package = Package(
         .library(
             name: "Dependencies",
             targets: ["Dependencies"]),
+        .library(
+            name: "DependencyObject",
+            targets: ["DependencyObject"]),
     ],
     dependencies: [
         // Dependencies declare other packages that this package depends on.
@@ -29,8 +32,11 @@ let package = Package(
         .target(
             name: "Dependencies",
             dependencies: ["ResolvingContainer"]),
+        .target(
+            name: "DependencyObject",
+            dependencies: ["Dependencies"]),
         .testTarget(
             name: "DependenciesTests",
-            dependencies: ["Dependencies", "Quick", "Nimble"]),
+            dependencies: ["Dependencies", "DependencyObject", "Quick", "Nimble"]),
     ]
 )

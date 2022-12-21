@@ -40,7 +40,7 @@ import ResolvingContainer
 ///
 /// Then use the key to define a new dependency property:
 ///
-///     extension Dependencies {
+///     extension DependencyContainer {
 ///         var myCustomValue: String {
 ///             get { self[MyDependencyKey.self] }
 ///             set { self[MyDependencyKey.self] = newValue }
@@ -73,7 +73,7 @@ public protocol DependencyKey {
 ///         static let defaultValue: String = "Default value"
 ///     }
 ///
-///     extension Dependencies {
+///     extension DependencyContainer {
 ///         var myCustomValue: String {
 ///             get { self[MyDependencyKey.self] }
 ///             set { self[MyDependencyKey.self] = newValue }
@@ -86,18 +86,18 @@ public protocol DependencyKey {
 ///     @Dependency(\.myCustomValue) var customValue: String
 ///
 /// To register dependency dynamically without registering new ``DependencyKey``,
-/// Call ``Dependencies`` instance method `register` and pass the object. For example:
+/// Call ``DependencyContainer`` instance method `register` and pass the object. For example:
 ///
-///     Dependencies.default.register(instance: MyCustomObject())
+///     DependencyContainer.default.register(instance: MyCustomObject())
 ///
 /// To access dynamically registered dependency instance, use ``Dependency``
 /// property wrapper passing the type of the object and optional container, or just omit parameters:
 ///
 ///     @Dependency var customObject: MyCustomObject
 ///
-public class Dependencies: ResolvingContainer {
+public class DependencyContainer: ResolvingContainer {
     
-    public static let `default` = Dependencies()
+    public static let `default` = DependencyContainer()
     
     private var storage = [ObjectIdentifier: Any]()
     
@@ -112,36 +112,84 @@ public class Dependencies: ResolvingContainer {
 /// A property wrapper that reads a value from a dependency container.
 ///
 /// Use the ``Dependency`` property wrapper to read a value
-/// stored in a dependency container. Indicate the value to read using an
-/// ``Dependencies`` key path in the property declaration. For example:
+/// stored in a dependency container. Indicate the value to read using a
+/// ``DependencyContainer`` key path in the property declaration. For example:
 ///
-///     @Environment(\.customValue) var value: MyCustomValue
+///     @Dependency(\.customValue) var value: MyCustomValue
 ///
 /// To read dynamically registered dependency instance, use ``Dependency``
 /// property wrapper passing the type of the object and optional container, or just omit parameters:
 ///
 ///     @Dependency var customObject: MyCustomObject
 ///
-@propertyWrapper public struct Dependency<Value> {
+@frozen @propertyWrapper public struct Dependency<Value> {
     
-    private let container: Dependencies
-    private let keyPath: KeyPath<Dependencies, Value>?
-    
-    public init(container: Dependencies = .default) {
-        self.container = container
-        keyPath = nil
-    }
-    
-    public init(_ keyPath: KeyPath<Dependencies, Value>, container: Dependencies = .default) {
-        self.container = container
-        self.keyPath = keyPath
-    }
+    private let getter: () -> Value
     
     public var wrappedValue: Value {
-        guard let value = keyPath.flatMap({ container[keyPath: $0] }) ?? container.resolve(Value.self) else {
-            fatalError("Failed to resolve: \(String(describing: Value.self))")
+        getter()
+    }
+    
+    public init(container: DependencyContainer = .default) {
+        getter = {
+            guard let value = container.resolve(Value.self) else {
+                fatalError("Failed to resolve: \(String(describing: Value.self))")
+            }
+            return value
         }
+    }
+    
+    public init(_ keyPath: KeyPath<DependencyContainer, Value>, container: DependencyContainer = .default) {
+        getter = { container[keyPath: keyPath] }
+    }
+}
+
+/// A property wrapper that reads and stores a value from a dependency container upon first access to the value.
+///
+/// Use the ``LazyDependency`` property wrapper to read a value
+/// from a dependency container and store it internally. Indicate the value to store using a
+/// ``DependencyContainer`` key path in the property declaration. For example:
+///
+///     @LazyDependency(\.customValue) var value: MyCustomValue
+///
+/// To read and store dynamically registered dependency instance, use ``LazyDependency``
+/// property wrapper passing the type of the object and optional container, or just omit parameters:
+///
+///     @LazyDependency var customObject: MyCustomObject
+///
+@propertyWrapper public struct LazyDependency<Value> {
+    
+    private class Storage {
+
+        lazy var value: Value = getter()
+
+        private let getter: () -> Value
         
-        return value
+        init(_ keyPath: KeyPath<DependencyContainer, Value>?, _ container: DependencyContainer = .default) {
+            if let keyPath {
+                getter = { container[keyPath: keyPath] }
+            } else {
+                getter = {
+                    guard let value = container.resolve(Value.self) else {
+                        fatalError("Failed to resolve: \(String(describing: Value.self))")
+                    }
+                    return value
+                }
+            }
+        }
+    }
+    
+    private var storage: Storage
+    
+    public var wrappedValue: Value {
+        storage.value
+    }
+    
+    public init(container: DependencyContainer = .default) {
+        storage = Storage(nil, container)
+    }
+    
+    public init(_ keyPath: KeyPath<DependencyContainer, Value>, container: DependencyContainer = .default) {
+        storage = Storage(keyPath, container)
     }
 }

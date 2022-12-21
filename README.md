@@ -2,9 +2,9 @@
 
 [![License](https://img.shields.io/badge/license-MIT-ff69b4.svg)](https://github.com/kzlekk/Dependencies/raw/master/LICENSE)
 ![Language](https://img.shields.io/badge/swift-5.0-orange.svg)
-![Coverage](https://img.shields.io/badge/coverage-87%25-yellowgreen)
+![Coverage](https://img.shields.io/badge/coverage-93%25-yellowgreen)
 
-A lightweight library replicating @Environment from SwiftUI but allowing to be used in any Swift class or struct.
+A lightweight library implementing functionality similar to @Environment from SwiftUI but allowing to be used in any Swift class or struct.
 
 ## Installation
 
@@ -43,7 +43,8 @@ To access the dependency, declare a property using the **Dependency** property w
 
 ```swift
 
-@Dependency(\.myCustomValue) var customValue: String
+@Dependency(\.myCustomValue) 
+var customValue: String
 
 ```
 
@@ -51,7 +52,7 @@ To register dependency dynamically without registering new **DependencyKey**, ca
 
 ```swift
 
-    Dependencies.default.register(instance: MyCustomObject())
+Dependencies.default.register(instance: MyCustomObject())
     
 ```
 
@@ -59,6 +60,7 @@ To access dynamically registered dependency instance, use **Dependency** propert
 
 ```swift
 
-    @Dependency var customObject: MyCustomObject
+@Dependency 
+var customObject: MyCustomObject
     
 ```
