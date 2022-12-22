@@ -39,9 +39,9 @@ import Dependencies
 ///
 ///     @DependencyObject var model: Model
 ///
-@frozen @propertyWrapper public struct DependencyObject<Value: ObservableObject>: DynamicProperty {
+@propertyWrapper public struct DependencyObject<Value: ObservableObject>: DynamicProperty {
     
-    @dynamicMemberLookup @frozen public struct Wrapper {
+    @dynamicMemberLookup public struct Wrapper {
 
         var object: Value
 

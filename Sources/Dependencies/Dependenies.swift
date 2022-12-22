@@ -101,7 +101,7 @@ public class DependencyContainer: ResolvingContainer {
     
     private var storage = [ObjectIdentifier: Any]()
     
-    private init() {}
+    public init() {}
     
     public subscript<Key>(provider: Key.Type) -> Key.Value where Key: DependencyKey {
         get { storage[ObjectIdentifier(Key.self)] as? Key.Value ?? Key.defaultValue }
@@ -122,7 +122,7 @@ public class DependencyContainer: ResolvingContainer {
 ///
 ///     @Dependency var customObject: MyCustomObject
 ///
-@frozen @propertyWrapper public struct Dependency<Value> {
+@propertyWrapper public struct Dependency<Value> {
     
     private let getter: () -> Value
     
